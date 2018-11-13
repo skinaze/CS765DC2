@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<title>Discussion Tool</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet" />
+	<link href="default.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="fonts.css" rel="stylesheet" type="text/css" media="all" />
+	<!--[if IE 6]>
+	<link href="default_ie6.css" rel="stylesheet" type="text/css" />
+	<![endif]-->
+
+	<!--Papaparse-->
+	<script src="PapaParse/papaparse.min.js"></script>
+	<script src="csvParse.js"></script>
+	<!--D3 scripts-->
+	<script src="d3/d3.js"></script>
+	<script src="BoxChart.js"></script>
+	<script src="ViolinChart.js"></script>
+	<!--Other scirpts-->
+	<script src="Brace.js"></script>
+</head>
+
+<body>
+	<div id="wrapper">
+		<div id="header-wrapper">
+			<div id="header" class="container">
+				<div id="logo">
+					<h1>Canvas Discussion Quality Analysis Tool</h1>
+					<p>BY Harry Zhou</p>
+				</div>
+			</div>
+		</div>
+		<div id="page" class="container">
+			<div id="sidebar1">
+				<div id="box1">
+					<h2>Index</h2>
+					<ul class="style1">
+						<li class="first"><a href="#part1">Overall Assement</a></li>
+						<li><a href="#part2">Behavior change in one discussion</a></li>
+					</ul>
+				</div>
+			</div>
+			<div id="content">
+				<p>Please select discussion file downloaded from canvas (csv File): </p>
+				<input type="file" id="csvFile" name="Canvas csv" accept="text/csv" onchange="csvParse();" />
+				<p id='defaultNotice'>The default file has been loaded! </p>
+				<h2><a name="part1">Overall Assessment</a></h2>
+				<div id="BoxChart"></div>
+				<p>This plot shows four measurements of all the discussions in the uploaded file:</p>
+				<ul>
+				<li>A box plot showing the distribution of the root posts' total characters;</li>
+				<li>A box plot showing the distribution of the root posts' text characters;</li>
+				<li>A dot plot showing the average of image per root post;</li>
+				<li>A dot plot showing the average of response to a root post per root post;</li>
+				</ul>
+				<p>In the plot above: 1) All the posts taken in to account are root posts; 2) The dashed line inside box plot is the average value, and the full line inside the box plot is the median value. </p>
+				<p>The primary purpose of this plot is to show the quality of one discussion compared with other discussions. There is an assumption that a discussion with high quality tends to have a longer post (more total characters), more images, and more responses. </p>
+				<p>With the accurate statistic shown, the user can also check whether these discussions go as expected. For example, if there&#39;s a requirement for one discussion that the participants should include at least one image in their posts, but the average image number is way less than one. This indicates that most of the participants didn&#39;t finish the requirement and this can be an issue with the discussion description.</p>
+
+
+				<h2><a name="part2">Participant behavior change in one discussion</a></h2>
+				<p>Please choose a discussion: </p>
+				<select id="disSelect" onchange="createViolinChart(dataByTopic, false);"></select>
+				<div id="ViolinChart"></div>
+				<p>This plot shows four measurements of one selected discussion in the uploaded file. Rather than showing participants&#39; behaviors in this discussion, it shows the change of behavior:</p>
+				<ul>
+				<li>The distribution of the change of the participants&#39; root post total characters against his/her average root post total characters;</li>
+				<li>The distribution of the change of the participants&#39; root post total text characters against his/her average root post total text characters.</li>
+				<li>The distribution of the change of the participants&#39; root post image numbers against his/her average root post image numbers.</li>
+				<li>The distribution of the change of the response numbers that the participants&#39; root post received against the average response numbers that the participants&#39; root post received.</li>
+				</ul>
+				<p>The purpose of this plot is to show the quality of one discussion based on the assumption that a more exciting topic will inspire the participants to share more ideas (more total characters), post more images and get more responses than they usually do. Thus, a discussion with more area to the right should have a much better quality.</p>
+
+
+				<!--Load default data-->
+				<script>defaultCsv()</script>
+				
+				<!--The citation of open source library-->
+				<h2>This Project used the following open source library</h2>
+				<p>D3: For building the visualization. <a href=https://github.com/d3/d3>https://github.com/d3/d3 </a> </p> 
+				<p>PapaParse: For CSV file parse. <a href="https://github.com/mholt/PapaParse">https://github.com/mholt/PapaParse</a></p>
+				<p>Outstretched CSS Template: For CSS style. <a href="https://templated.co/outstretched">https://templated.co/outstretched</a></p>
+				<p>Generate Path for Curly Bracket: For bracket of the 2nd chart. <a href="http://bl.ocks.org/alexhornbake/6005176">http://bl.ocks.org/alexhornbake/6005176</a></p>
+			</div>
+		</div>
+</body>
+
+</html>
