@@ -7,8 +7,8 @@ var genBoxVar = function (data, orderFunc = d3.ascending, accessor = null) {
 	// Get the data
 	var valueTemp = new Array;
 	data.forEach( d => {
-		if (accessor != null) valueTemp.push(Math.floor(accessor(d)));
-		else valueTemp.push(Math.floor(d));
+		if (accessor != null) valueTemp.push(Number(accessor(d)));
+		else valueTemp.push(Number(d));
 	});
 	// Sort the data
 	valueTemp.sort(orderFunc);

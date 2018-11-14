@@ -1,5 +1,5 @@
 // Create the box chart
-var createBoxChart = function (data) {
+var createBoxChart = function (dataByTopic) {
 	var width = 800,
 		height = 400,
 		width_label = 750,
@@ -21,7 +21,7 @@ var createBoxChart = function (data) {
 
 	// Create scales
 	var x = d3.scaleBand()
-		.domain(data.topicList)
+		.domain(dataByTopic.topicList)
 		.rangeRound([margin_left,width+margin_left])
 		.padding([paddingTopic]); // The overall x-scale
 	var topicScale = new Object; // Horizontal scale for each topic
@@ -34,7 +34,7 @@ var createBoxChart = function (data) {
 	range.images.bottom = 0;
 	range.resp = new Object;
 	range.resp.bottom = 0;
-	data.forEach(element => {
+	dataByTopic.forEach(element => {
 		// Set the horizontal scale
 		tempScale = d3.scaleBand()
 			.domain(measurement)
@@ -72,7 +72,7 @@ var createBoxChart = function (data) {
 		.domain(measurement)
 		.range(d3.schemeCategory10); // measurement color scale
 	var background = d3.scaleOrdinal()
-		.domain(data.topicList)
+		.domain(dataByTopic.topicList)
 		.range(["#deebf7","#c6dbef"]); // The background color
 	var labelsScale = d3.scaleBand()
 		.domain(measurement)
@@ -88,7 +88,7 @@ var createBoxChart = function (data) {
 
 	// Drawing axis
 	var xAxis = d3.axisBottom(x)
-		.ticks(data.topicList.length);
+		.ticks(dataByTopic.topicList.length);
 	svg.append('g')
 		.attr('id','x-axis')
 		.attr('transform', "translate(0,"+(height+margin_top)+")")
@@ -103,8 +103,8 @@ var createBoxChart = function (data) {
 		.text("Discussion ID");
 
 	// Drawing data points
-	var drawBox = function(d3select, data, className) { // Draw box function
-		var selectEnter = d3select.selectAll('.'+className).data(data).enter();
+	var drawBox = function(d3select, dataByTopic, className) { // Draw box function
+		var selectEnter = d3select.selectAll('.'+className).data(dataByTopic).enter();
 		selectEnter.append('line') // The center vertical line
 			.attr('x1', function(d){return topicScale[d.key](className)+0.5*topicScale[d.key].bandwidth();}) // x1 is from the topicScale of this discussion id add half of the bandwith of the topicScale
 			.attr('y1', function(d){return y[className](d[className].boxTop);}) // y1 is from the class y scale of the top to this disccussion
@@ -254,8 +254,8 @@ var createBoxChart = function (data) {
 			.attr('text-anchor', "start")
 			.attr('class', className);
 	}
-	var drawDot = function(d3select, data, className, measureName) { // Draw dot function
-		var selectEnter = d3select.selectAll('.'+className).data(data).enter();
+	var drawDot = function(d3select, dataByTopic, className, measureName) { // Draw dot function
+		var selectEnter = d3select.selectAll('.'+className).data(dataByTopic).enter();
 		selectEnter.append('circle') // The value circle
 			.attr('cx', function(d){return topicScale[d.key](className)+0.5*topicScale[d.key].bandwidth();}) // x is from the topicScale of this discussion id add half of the bandwith of the topicScale
 			.attr('cy', function(d){return y[className](d[className][measureName]);}) // y is from the class y scale of the measureName to this disccussion
@@ -283,7 +283,7 @@ var createBoxChart = function (data) {
 	// background
 	var bg = plot.append('g')
 		.attr('id', 'bg');
-	bg.selectAll(".bg").data(data).enter().append('rect')
+	bg.selectAll(".bg").data(dataByTopic).enter().append('rect')
 		.attr('x', function(d){return x(d.key)-0.5*(x.step()-x.bandwidth());})
 		.attr('y', margin_top)
 		.attr('width', x.step())
@@ -294,22 +294,22 @@ var createBoxChart = function (data) {
 	var chars_total_plot = plot.append('g')
 		.attr('id', 'chars_total_plot')
 		.attr('font-size', "10");
-	drawBox(chars_total_plot, data, "chars_total");
+	drawBox(chars_total_plot, dataByTopic, "chars_total");
 	// textchars
 	var textchars_plot = plot.append('g')
 		.attr('id', 'textchars_plot')
 		.attr('font-size', "10");
-	drawBox(textchars_plot, data, "textchars");
+	drawBox(textchars_plot, dataByTopic, "textchars");
 	// images
 	var images_plot = plot.append('g')
 		.attr('id', 'images_plot')
 		.attr('font-size', "10");
-	drawDot(images_plot, data, "images", "avg");
+	drawDot(images_plot, dataByTopic, "images", "avg");
 	// resp
 	var resp_plot = plot.append('g')
 		.attr('id', 'resp_plot')
 		.attr('font-size', "10");
-	drawDot(images_plot, data, "resp", "avg");
+	drawDot(images_plot, dataByTopic, "resp", "avg");
 
 	// Draw lables
 	var labels =svg.append('g')
