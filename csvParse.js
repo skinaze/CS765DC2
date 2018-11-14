@@ -1,6 +1,7 @@
 var defaultCsvName = "2017-5-5.csv";
 var csvData = new Array;
 var dataByTopic;
+var sigma;
 
 // Load the default csv
 function defaultCsv() {
@@ -12,7 +13,7 @@ function defaultCsv() {
 			dataParse();
 			createBoxChart(dataByTopic);
 			genDisSelect();
-			createViolinChart(dataByTopic, true);
+			createViolinChart(dataByTopic, sigma, true);
 		},
 		header: true,
 		skipEmptyLines: true
@@ -30,7 +31,7 @@ function csvParse() {
 			dataParse();
 			createBoxChart(dataByTopic);
 			genDisSelect();
-			createViolinChart(dataByTopic, true);
+			createViolinChart(dataByTopic, sigma, true);
 		},
 		header: true,
 		skipEmptyLines: true
@@ -79,6 +80,13 @@ function dataParse() {
 			function(d){return d.totalChildren});
 		personalAvg[person.key] = temp;
 	});
+
+	// Calculate the standard diviation
+	sigma = new Object;
+	sigma.chars_total = d3.deviation(dataRoot.values, function(d){return d.chars_total;});
+	sigma.textchars = d3.deviation(dataRoot.values, function(d){return d.textchars;});
+	sigma.images = d3.deviation(dataRoot.values, function(d){return d.images;});
+	sigma.resp = d3.deviation(dataRoot.values, function(d){return d.totalChildren;});
 
 	// Group data by topic
 	dataByTopic = d3.nest()

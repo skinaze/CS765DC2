@@ -14,7 +14,7 @@
 	<![endif]-->
 
 	<!--Papaparse-->
-	<script src="PapaParse/papaparse.min.js"></script>
+	<script src="PapaParse/papaparse.js"></script>
 	<script src="csvParse.js"></script>
 	<!--D3 scripts-->
 	<script src="d3/d3.js"></script>
@@ -66,7 +66,7 @@
 
 				<h2><a name="part2">Participant behavior change in one discussion</a></h2>
 				<p>Please choose a discussion: </p>
-				<select id="disSelect" onchange="createViolinChart(dataByTopic, false);"></select>
+				<select id="disSelect" onchange="createViolinChart(dataByTopic, sigma, false);"></select>
 				<div id="ViolinChart"></div>
 				<p>This plot shows four measurements of one selected discussion in the uploaded file. Rather than showing participants&#39; behaviors in this discussion, it shows the change of behavior:</p>
 				<ul>

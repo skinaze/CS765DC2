@@ -1,4 +1,4 @@
-createViolinChart = function(dataByTopic, intital) {
+createViolinChart = function(dataByTopic, sigma, intital) {
 	var width = 800,
 		height_perplot = 200,
 		width_label = 500,
@@ -6,7 +6,7 @@ createViolinChart = function(dataByTopic, intital) {
 		margin_right = 20,
 		margin_top = 20,
 		margin_bottom = 40,
-		margin_label = 40,
+		margin_label = 80,
 		bin_num = 600,
 		dot_radius = 20,
 		paddingMeasure = 0.20,
@@ -17,10 +17,12 @@ createViolinChart = function(dataByTopic, intital) {
 		labelRectSize = 20,
 		xAxisTick = 11,
 		measurement = ["chars_total", "textchars", "images", "resp"],
-		measureName = ["Total characters", "Total text characters", "Image number per post", "Response number per post"];
+		measureName = ["Total characters", "Total text characters", "Image number per post", "Response number per post"],
+		rangeColor = ['#4daf4a', '#377eb8', '#e41a1c'],
+		rangeColorName = ['Way Ahead', 'Normal', 'Way Behind']
 
 	// Get discussion selection
-	var disSelect = document.getElementById("disSelect")
+	var disSelect = document.getElementById("disSelect");
 	var dis = disSelect.options[disSelect.selectedIndex].value;
 
 	// create the histogram and box varables
@@ -56,7 +58,7 @@ createViolinChart = function(dataByTopic, intital) {
 			});
 			distribution[element.key][ms].maxDsty = d3.max(distribution[element.key][ms],
 				function(d){return d.density;});
-			boxVar[element.key][ms] = genBoxVar(element[ms].change);
+			boxVar[element.key][ms] = genBoxVar(element[ms].change); // The box variables
 		});
 	});
 
@@ -82,6 +84,10 @@ createViolinChart = function(dataByTopic, intital) {
 			.domain([-measureMax[ms], measureMax[ms]])
 			.range([margin_left, margin_left+width]);
 	});
+	var colorLabelScale = d3.scaleBand()
+		.domain(rangeColor)
+		.rangeRound([margin_left+0.5*width+0.5*width_label, margin_left+0.5*width-0.5*width_label])
+		.padding(paddingLabel);
 
 	var initialDraw = function() {
 		// Creating the svg
@@ -119,20 +125,43 @@ createViolinChart = function(dataByTopic, intital) {
 			.attr('opacity', "1");
 
 		// Drawing the violin graph
-		var areaDraw = new Object;
 		var violinArea = svg.append('g')
 			.attr('id', 'violin');
 		measurement.forEach(ms => {
-			areaDraw[ms] = d3.area()
+			var areaDraw = d3.area()
 				.x(function(d){return x[ms]((d.x0+d.x1)*0.5);})
 				.y0(function(d){return ySub[ms](d.density)})
 				.y1(function(d){return ySub[ms](-d.density)});
-			violinArea.append('path')
-				.attr('d', areaDraw[ms](distribution[dis][ms]))
-				.attr('fill', d3.schemeCategory10[0])
-				.attr('opacity', "0.5")
-				.attr('class', 'violin')
-				.attr('id', 'violin-'+ms);
+			var distByRange = d3.nest().key(function(d){
+				if ((d.x0+d.x1)*0.5 > sigma[ms]) return "excel";
+				else if ((d.x0+d.x1)*0.5 < -sigma[ms]) return "behind";
+				else return "normal";
+			}).entries(distribution[dis][ms]);
+			var targetRange;
+			targetRange = distByRange.find(function(d){return d.key == "excel";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.append('path')
+					.attr('d', areaDraw(targetRange.values))
+					.attr('fill', rangeColor[0])
+					.attr('opacity', "0.5")
+					.attr('class', 'violin')
+					.attr('id', 'violin-'+ms+'-excel');
+			targetRange = distByRange.find(function(d){return d.key == "normal";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.append('path')
+					.attr('d', areaDraw(targetRange.values))
+					.attr('fill', rangeColor[1])
+					.attr('opacity', "0.5")
+					.attr('class', 'violin')
+					.attr('id', 'violin-'+ms+'-normal');
+			targetRange = distByRange.find(function(d){return d.key == "behind";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.append('path')
+					.attr('d', areaDraw(targetRange.values))
+					.attr('fill', rangeColor[2])
+					.attr('opacity', "0.5")
+					.attr('class', 'violin')
+					.attr('id', 'violin-'+ms+'-behind');
 		});
 
 		// Drawing the box graph
@@ -179,7 +208,7 @@ createViolinChart = function(dataByTopic, intital) {
 		// Drawing labels
 		labelArea = svg.append('g')
 			.attr('id', 'labels');
-		labelArea.append('path')
+		labelArea.append('path') // left bracket
 			.attr('d', 
 				makeCurlyBrace(margin_left,
 					margin_top+height_perplot*measurement.length,
@@ -190,14 +219,14 @@ createViolinChart = function(dataByTopic, intital) {
 			)
 			.attr('opacity',"0.7")
 			.attr('class', "curlyBrace");
-		labelArea.append('text')
+		labelArea.append('text') // left bracket text
 			.attr('x', margin_left+0.25*width)
 			.attr('y', margin_top+height_perplot*measurement.length)
 			.attr('dy',35)
 			.attr('font-size',16)
 			.attr('text-anchor',"middle")
 			.text("Below Average");
-		labelArea.append('path')
+		labelArea.append('path') // right bracket
 			.attr('d', 
 				makeCurlyBrace(margin_left+0.5*width,
 					margin_top+height_perplot*measurement.length,
@@ -208,13 +237,31 @@ createViolinChart = function(dataByTopic, intital) {
 			)
 			.attr('opacity',"0.7")
 			.attr('class', "curlyBrace");
-		labelArea.append('text')
+		labelArea.append('text') // right bracket text
 			.attr('x', margin_left+0.75*width)
 			.attr('y', margin_top+height_perplot*measurement.length)
 			.attr('dy',35)
 			.attr('font-size',16)
 			.attr('text-anchor',"middle")
 			.text("Above Average");
+		rangeColor.forEach((d,i) => {
+			labelArea.append('rect')
+				.attr('x', colorLabelScale(d))
+				.attr('y', margin_top+height_perplot*measurement.length+60)
+				.attr('width', labelRectSize)
+				.attr('height', labelRectSize)
+				.attr('fill', d)
+				.attr('class','lables');
+			labelArea.append('text')
+				.attr('x', colorLabelScale(d))
+				.attr('y', margin_top+height_perplot*measurement.length+60)
+				.attr('dx', 1.1*labelRectSize)
+				.attr('dy', 0.7*labelRectSize)
+				.attr('text-anchor', 'start')
+				.text(rangeColorName[i])
+				.attr('class','lables');
+		});
+		
 	}
 
 	var changeDiscussion = function() {
@@ -222,34 +269,53 @@ createViolinChart = function(dataByTopic, intital) {
 
 		// Redraw the violin graph
 		var violinArea = svg.select("#violin");
-		var areaDraw = new Object;
 		measurement.forEach(ms => {
-			areaDraw[ms] = d3.area()
+			var areaDraw = d3.area()
 				.x(function(d){return x[ms]((d.x0+d.x1)*0.5);})
 				.y0(function(d){return ySub[ms](d.density)})
 				.y1(function(d){return ySub[ms](-d.density)});
-			violinArea.select("#violin-"+ms)
-				.transition()
-				.duration(1000)
-				.attr('d', areaDraw[ms](distribution[dis][ms]));
+			var distByRange = d3.nest().key(function(d){
+				if ((d.x0+d.x1)*0.5 > sigma[ms]) return "excel";
+				else if ((d.x0+d.x1)*0.5 < -sigma[ms]) return "behind";
+				else return "normal";
+			}).entries(distribution[dis][ms]);
+			var targetRange;
+			targetRange = distByRange.find(function(d){return d.key == "excel";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.select("#violin-"+ms+'-excel')
+					.transition().duration(1000)
+					.attr('d', areaDraw(targetRange.values));
+			targetRange = distByRange.find(function(d){return d.key == "normal";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.select("#violin-"+ms+'-normal')
+					.transition().duration(1000)
+					.attr('d', areaDraw(targetRange.values));
+			targetRange = distByRange.find(function(d){return d.key == "behind";})
+			if (typeof targetRange != 'undefined') 
+				violinArea.select("#violin-"+ms+'-behind')
+					.transition().duration(1000)
+					.attr('d', areaDraw(targetRange.values));
 		});
 
 		// Redraw the box graph
 		var boxArea = svg.select("#box");
 		measurement.forEach(ms => {
 			var currentBox = boxArea.select('#box-'+ms)
-			currentBox.transition().duration(1000);
 			currentBox.select('#box-'+ms+'-rect')
+				.transition().duration(1000)
 				.attr('x', x[ms](boxVar[dis][ms].b25))
 				.attr('width', x[ms](boxVar[dis][ms].t25)-x[ms](boxVar[dis][ms].b25));
 			currentBox.select('#box-'+ms+'-line')
+				.transition().duration(1000)
 				.attr('x1', x[ms](boxVar[dis][ms].boxBottom))
 				.attr('x2', x[ms](boxVar[dis][ms].boxTop));
 			currentBox.select('#box'+ms+'-mid')
+				.transition().duration(1000)
 				.attr('cx', x[ms](boxVar[dis][ms].mid));
 			var outliers = boxVar[dis][ms].topOutliers.concat(boxVar[dis][ms].bottomOutliers);
 			var boxCircle = currentBox.selectAll('.box'+ms+'-circle').data(outliers, function(d){return d;});
 			boxCircle.enter().append('circle')
+				.transition().duration(1000)
 				.attr('cx', function(d){return x[ms](d);}) 
 				.attr('cy', y(ms)+0.5*y.bandwidth()) 
 				.attr('r', boxOutlierRaius)
