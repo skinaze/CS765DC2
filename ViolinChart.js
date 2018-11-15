@@ -139,29 +139,44 @@ createViolinChart = function(dataByTopic, sigma, intital) {
 			}).entries(distribution[dis][ms]);
 			var targetRange;
 			targetRange = distByRange.find(function(d){return d.key == "excel";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.append('path')
-					.attr('d', areaDraw(targetRange.values))
-					.attr('fill', rangeColor[0])
-					.attr('opacity', "0.5")
-					.attr('class', 'violin')
-					.attr('id', 'violin-'+ms+'-excel');
+			if (typeof targetRange != 'undefined') violinArea.append('path')
+				.attr('d', areaDraw(targetRange.values))
+				.attr('fill', rangeColor[0])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-excel');
+			else violinArea.append('path')
+				.attr('d', '')
+				.attr('fill', rangeColor[0])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-excel');
 			targetRange = distByRange.find(function(d){return d.key == "normal";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.append('path')
-					.attr('d', areaDraw(targetRange.values))
-					.attr('fill', rangeColor[1])
-					.attr('opacity', "0.5")
-					.attr('class', 'violin')
-					.attr('id', 'violin-'+ms+'-normal');
+			if (typeof targetRange != 'undefined') violinArea.append('path')
+				.attr('d', areaDraw(targetRange.values))
+				.attr('fill', rangeColor[1])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-normal');
+			else violinArea.append('path')
+				.attr('d', '')
+				.attr('fill', rangeColor[1])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-normal');
 			targetRange = distByRange.find(function(d){return d.key == "behind";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.append('path')
-					.attr('d', areaDraw(targetRange.values))
-					.attr('fill', rangeColor[2])
-					.attr('opacity', "0.5")
-					.attr('class', 'violin')
-					.attr('id', 'violin-'+ms+'-behind');
+			if (typeof targetRange != 'undefined') violinArea.append('path')
+				.attr('d', areaDraw(targetRange.values))
+				.attr('fill', rangeColor[2])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-behind');
+			else violinArea.append('path')
+				.attr('d', '')
+				.attr('fill', rangeColor[2])
+				.attr('opacity', "0.5")
+				.attr('class', 'violin')
+				.attr('id', 'violin-'+ms+'-behind');
 		});
 
 		// Drawing the box graph
@@ -281,20 +296,26 @@ createViolinChart = function(dataByTopic, sigma, intital) {
 			}).entries(distribution[dis][ms]);
 			var targetRange;
 			targetRange = distByRange.find(function(d){return d.key == "excel";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.select("#violin-"+ms+'-excel')
-					.transition().duration(1000)
-					.attr('d', areaDraw(targetRange.values));
+			if (typeof targetRange != 'undefined') violinArea.select("#violin-"+ms+'-excel')
+				.transition().duration(1000)
+				.attr('d', areaDraw(targetRange.values));
+			else violinArea.select("#violin-"+ms+'-excel')
+				.transition().duration(1000)
+				.attr('d', '');
 			targetRange = distByRange.find(function(d){return d.key == "normal";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.select("#violin-"+ms+'-normal')
-					.transition().duration(1000)
-					.attr('d', areaDraw(targetRange.values));
+			if (typeof targetRange != 'undefined') violinArea.select("#violin-"+ms+'-normal')
+				.transition().duration(1000)
+				.attr('d', areaDraw(targetRange.values));
+			else violinArea.select("#violin-"+ms+'-normal')
+				.transition().duration(1000)
+				.attr('d', '');
 			targetRange = distByRange.find(function(d){return d.key == "behind";})
-			if (typeof targetRange != 'undefined') 
-				violinArea.select("#violin-"+ms+'-behind')
-					.transition().duration(1000)
-					.attr('d', areaDraw(targetRange.values));
+			if (typeof targetRange != 'undefined') violinArea.select("#violin-"+ms+'-behind')
+				.transition().duration(1000)
+				.attr('d', areaDraw(targetRange.values));
+			else violinArea.select("#violin-"+ms+'-behind')
+				.transition().duration(1000)
+				.attr('d', '');
 		});
 
 		// Redraw the box graph

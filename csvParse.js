@@ -80,14 +80,7 @@ function dataParse() {
 			function(d){return d.totalChildren});
 		personalAvg[person.key] = temp;
 	});
-
-	// Calculate the standard diviation
-	sigma = new Object;
-	sigma.chars_total = d3.deviation(dataRoot.values, function(d){return d.chars_total;});
-	sigma.textchars = d3.deviation(dataRoot.values, function(d){return d.textchars;});
-	sigma.images = d3.deviation(dataRoot.values, function(d){return d.images;});
-	sigma.resp = d3.deviation(dataRoot.values, function(d){return d.totalChildren;});
-
+	
 	// Group data by topic
 	dataByTopic = d3.nest()
 		.key(function(d){return d.topicID})
@@ -168,6 +161,24 @@ function dataParse() {
 			element.resp.change.push(person.resp - personalAvg[person.key].resp);
 		});
 	});
+
+	// Calculate the standard diviation
+	var change = new Object;
+	change.chars_total = new Array;
+	change.textchars = new Array;
+	change.images = new Array;
+	change.resp = new Array;
+	dataByTopic.forEach(element => {
+		change.chars_total = change.chars_total.concat(element.chars_total.change);
+		change.textchars = change.textchars.concat(element.textchars.change);
+		change.images = change.images.concat(element.images.change);
+		change.resp = change.resp.concat(element.resp.change);
+	});
+	sigma = new Object;
+	sigma.chars_total = d3.deviation(change.chars_total);
+	sigma.textchars = d3.deviation(change.textchars);
+	sigma.images = d3.deviation(change.images);
+	sigma.resp = d3.deviation(change.resp);
 
 }
 
