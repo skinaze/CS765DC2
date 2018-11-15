@@ -2,7 +2,7 @@
 var createBoxChart = function (dataByTopic) {
 	var width = 800,
 		height = 400,
-		width_label = 750,
+		width_label = 800,
 		margin_left = 20,
 		margin_right = 20,
 		margin_top = 20,
