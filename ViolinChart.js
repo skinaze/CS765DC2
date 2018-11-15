@@ -16,8 +16,26 @@ createViolinChart = function(dataByTopic, sigma, intital) {
 		boxOutlierRaius =2,
 		labelRectSize = 20,
 		xAxisTick = 11,
-		measurement = ["chars_total", "textchars", "images", "resp"],
-		measureName = ["Total characters", "Total text characters", "Image number per post", "Response number per post"],
+		measurement = [
+			"chars_total", 
+			"chars_total_resp", 
+			//"textchars", 
+			//"textchars_resp", 
+			"images", 
+			//"images_resp", 
+			"resp", 
+			//"resp_person"
+		],
+		measureName = [
+			"Post total characters", 
+			"Response total characters", 
+			//"Post total text characters", 
+			//"Response total text characters",
+			"Image number per post",
+			//"Image number per response",  
+			"Response per post", 
+			//"Response posted per person"
+		],
 		rangeColor = ['#4daf4a', '#377eb8', '#e41a1c'],
 		rangeColorName = ['Way Ahead', 'Normal', 'Way Behind']
 
@@ -58,7 +76,8 @@ createViolinChart = function(dataByTopic, sigma, intital) {
 			});
 			distribution[element.key][ms].maxDsty = d3.max(distribution[element.key][ms],
 				function(d){return d.density;});
-			boxVar[element.key][ms] = genBoxVar(element[ms].change); // The box variables
+			if (element[ms].change.length > 0) boxVar[element.key][ms] = genBoxVar(element[ms].change); // The box variables
+			else boxVar[element.key][ms] = {avg:0, mid:0, t25:0, b25:0, top:0, bottom:0, boxTop:0, boxBottom:0, topOutliers:[], bottomOutliers:[]};
 		});
 	});
 

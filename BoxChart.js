@@ -15,9 +15,39 @@ var createBoxChart = function (dataByTopic) {
 		boxOutlierRaius = 2,
 		showOutlierLabel = false,
 		circleRadius = 8,
+		numberFontSize = 9,
 		labelRectSize = 20,
-		measurement = ["chars_total", "textchars", "images", "resp"],
-		measureName = {chars_total: "Total characters", textchars: "Total text characters", images: "Image number per post", resp: "Response number per post"};
+		labelFontSize = 12,
+		measurement = [
+			"chars_total", 
+			"chars_total_resp", 
+			//"textchars", 
+			//"textchars_resp", 
+			"images", 
+			//"images_resp",
+			"resp",
+			"resp_person"
+		],
+		measureType = {
+			chars_total: "box", 
+			chars_total_resp: "box", 
+			textchars: "box", 
+			textchars_resp: "box", 
+			images: "dot", 
+			images_resp: "dot",
+			resp: "dot",
+			resp_person: "dot"
+		},
+		measureName = {
+			chars_total: "Post total characters", 
+			chars_total_resp:"Response total character", 
+			textchars: "Post total text characters", 
+			textchars_resp: "Response total text character",
+			images: "Image number per post", 
+			images_resp: "Image number per response",
+			resp: "Response per post",
+			resp_person: "Response posted per person"
+		};
 
 	// Create scales
 	var x = d3.scaleBand()
@@ -26,48 +56,34 @@ var createBoxChart = function (dataByTopic) {
 		.padding([paddingTopic]); // The overall x-scale
 	var topicScale = new Object; // Horizontal scale for each topic
 	var range = new Object; // The vertical range
-	range.chars_total = new Object;
-	range.chars_total.bottom = 0;
-	range.textchars = new Object;
-	range.textchars.bottom = 0;
-	range.images = new Object;
-	range.images.bottom = 0;
-	range.resp = new Object;
-	range.resp.bottom = 0;
+	measurement.forEach(ms => {
+		range[ms] = new Object;
+		range[ms].bottom = 0;
+	});
 	dataByTopic.forEach(element => {
 		// Set the horizontal scale
-		tempScale = d3.scaleBand()
+		topicScale[element.key] = d3.scaleBand()
 			.domain(measurement)
 			.rangeRound([x(element.key), x(element.key)+x.bandwidth()])
 			.padding([paddingMeasure]);
-		topicScale[element.key] = tempScale;
 		// Set top and bottom for each measurement
-		if (typeof range.chars_total.top == 'undefined') range.chars_total.top = element.chars_total.top;
-		else if (range.chars_total.top < element.chars_total.top) range.chars_total.top = element.chars_total.top;
-		if (typeof range.textchars.top == 'undefined') range.textchars.top = element.textchars.top;
-		else if (range.textchars.top < element.textchars.top) range.textchars.top = element.textchars.top;
-		if (typeof range.images.top == 'undefined') range.images.top = element.images.avg;
-		else if (range.images.top < element.images.avg) range.images.top = element.images.avg;
-		if (typeof range.resp.top == 'undefined') range.resp.top = element.resp.avg;
-		else if (range.resp.top < element.resp.avg) range.resp.top = element.resp.avg;
+		measurement.forEach(ms => {
+			if (measureType[ms] == "box") {
+				if (typeof range[ms].top == 'undefined') range[ms].top = element[ms].top;
+				else if (range[ms].top < element[ms].top) range[ms].top = element[ms].top;
+			} else if (measureType[ms] == "dot") {
+				if (typeof range[ms].top == 'undefined') range[ms].top = element[ms].avg;
+				else if (range[ms].top < element[ms].top) range[ms].top = element[ms].avg;
+			} else {console.log("Undefined measureType: "+ms);}
+		});
 	});
-	range.chars_total.top = Math.round(range.chars_total.top*1.1); // Scale up maxinum to 1.1 times
-	range.textchars.top = Math.round(range.textchars.top*1.1); // Scale up maxinum to 1.1 times
-	range.images.top = Math.round(range.images.top*1000*1.1)/1000; // Scale up maxinum to 1.1 times
-	range.resp.top = Math.round(range.resp.top*1000*1.1)/1000; // Scale up maxinum to 1.1 times
 	var y = new Object; // Different y scale for different measurement
-	y.chars_total = d3.scaleLinear()
-		.domain([range.chars_total.bottom, range.chars_total.top])
-		.range([height+margin_top, margin_top]); // chars_total measurement
-	y.textchars = d3.scaleLinear()
-		.domain([range.textchars.bottom, range.textchars.top])
-		.range([height+margin_top, margin_top]); // textchars measurement
-	y.images = d3.scaleLinear()
-		.domain([range.images.bottom, range.images.top])
-		.range([height+margin_top, margin_top]); // images measurement
-	y.resp = d3.scaleLinear()
-		.domain([range.resp.bottom, range.resp.top])
-		.range([height+margin_top, margin_top]); //resp measurement
+	measurement.forEach(ms => {
+		range[ms].top = Math.ceil(range[ms].top*1.1); // Scale up maxinum to 1.1 times
+		y[ms] = d3.scaleLinear()
+		.domain([range[ms].bottom, range[ms].top])
+		.range([height+margin_top, margin_top]); // measurement scale
+	});
 	var measureColor = d3.scaleOrdinal()
 		.domain(measurement)
 		.range(d3.schemeCategory10); // measurement color scale
@@ -290,31 +306,21 @@ var createBoxChart = function (dataByTopic) {
 		.attr('height', height)
 		.attr('fill', function(d){return background(d.key)})
 		.attr('class', "bg");
-	// chars_total
-	var chars_total_plot = plot.append('g')
-		.attr('id', 'chars_total_plot')
-		.attr('font-size', "10");
-	drawBox(chars_total_plot, dataByTopic, "chars_total");
-	// textchars
-	var textchars_plot = plot.append('g')
-		.attr('id', 'textchars_plot')
-		.attr('font-size', "10");
-	drawBox(textchars_plot, dataByTopic, "textchars");
-	// images
-	var images_plot = plot.append('g')
-		.attr('id', 'images_plot')
-		.attr('font-size', "10");
-	drawDot(images_plot, dataByTopic, "images", "avg");
-	// resp
-	var resp_plot = plot.append('g')
-		.attr('id', 'resp_plot')
-		.attr('font-size', "10");
-	drawDot(images_plot, dataByTopic, "resp", "avg");
+	// Draw data for measurements
+	measurement.forEach(ms => {
+		var msplot = plot.append('g')
+			.attr('id', ms+'_plot')
+			.attr('font-size', numberFontSize);
+		if (measureType[ms] == "box") drawBox(msplot, dataByTopic, ms);
+		else if (measureType[ms] == "dot") drawDot(msplot, dataByTopic, ms, "avg");
+		else console.log("Undefined measureType: "+ms);
+	})
 
 	// Draw lables
 	var labels =svg.append('g')
 		.attr('id', "lables")
 		.attr('transform', "translate(0, "+(margin_top+margin_bottom+height)+")")
+		.attr('font-size', labelFontSize)
 		.selectAll('.lables')
 		.data(measurement)
 		.enter();

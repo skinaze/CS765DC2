@@ -64,11 +64,11 @@ function dataParse() {
 		.find(function(d){return (d.key == "children")}); // Response
 
 	// Personal average behavior
-	var dataByPerson = d3.nest()
+	var dataByPersonOfRoot = d3.nest()
 		.key(function(d){return d.user})
 		.entries(dataRoot.values);
-	var personalAvg = new Object;
-	dataByPerson.forEach(person => {
+	var personalAvgOfRoot = new Object;
+	dataByPersonOfRoot.forEach(person => {
 		temp = new Object;
 		temp.chars_total = d3.mean(person.values,
 			function(d){return d.chars_total;});
@@ -78,7 +78,24 @@ function dataParse() {
 			function(d){return d.images;});
 		temp.resp = d3.mean(person.values,
 			function(d){return d.totalChildren});
-		personalAvg[person.key] = temp;
+		personalAvgOfRoot[person.key] = temp;
+	});
+	var dataByPersonOfChildren = d3.nest()
+		.key(function(d){return d.user})
+		.entries(dataChildren.values);
+	var personalAvgOfChildren = new Object;
+	dataByPersonOfChildren.forEach(person => {
+		temp = new Object;
+		temp.chars_total_resp = d3.mean(person.values,
+			function(d){return d.chars_total;});
+		temp.textchars_resp = d3.mean(person.values,
+			function(d){return d.textchars;});
+		temp.images_resp = d3.mean(person.values,
+			function(d){return d.images;});
+		temp.resp_person = d3.mean(
+			d3.nest().key(function(d){return d.topicID;}).entries(person.values),
+			function(d){return d.values.length;});
+		personalAvgOfChildren[person.key] = temp;
 	});
 	
 	// Group data by topic
@@ -119,8 +136,14 @@ function dataParse() {
 		// chars_total part
 		element.chars_total = genBoxVar(elementRoot.values, d3.ascending, function(d){return d.chars_total;});
 
+		// chars_total_resp part
+		element.chars_total_resp = genBoxVar(elementChildren.values, d3.ascending, function(d){return d.chars_total;});
+
 		// textchars part
 		element.textchars = genBoxVar(elementRoot.values, d3.ascending, function(d){return d.textchars;});
+
+		// textchars_resp part
+		element.textchars_resp = genBoxVar(elementChildren.values, d3.ascending, function(d){return d.textchars;});
 
 		// images part
 		// 1) images statistic
@@ -130,6 +153,14 @@ function dataParse() {
 			function(d){return (Math.floor(d.images) > 0)?1:0;});
 		element.images.ratio = element.images.withImage/elementRoot.values.length;
 
+		// images_resp part
+		// 1) images_resp statistic
+		element.images_resp = genBoxVar(elementChildren.values, d3.ascending, function(d){return d.images;});
+		// 2) images ratio
+		element.images_resp.withImage = d3.sum(elementChildren.values,
+			function(d){return (Math.floor(d.images) > 0)?1:0;});
+		element.images_resp.ratio = element.images_resp.withImage/elementChildren.values.length;
+
 		// Response part
 		// 1) Response statistic
 		element.resp = genBoxVar(elementRoot.values, d3.ascending, function(d){return d.totalChildren;});
@@ -138,11 +169,21 @@ function dataParse() {
 		element.resp.root_num = elementRoot.values.length;
 		element.resp.ratio = element.resp.resp_num/element.resp.root_num; // Average response per post
 
+		// Response per person posts part
+		var respByPerson = d3.nest().key(function(d){return d.user}).entries(elementChildren.values);
+		var respPerPerson = new Array;
+		respByPerson.forEach(p => {respPerPerson.push(p.values.length)});
+		element.resp_person = genBoxVar(respPerPerson);
+
 		// Part2: distribution (change in behavior)
 		element.chars_total.change = new Array;
+		element.chars_total_resp.change = new Array;
 		element.textchars.change = new Array;
+		element.textchars_resp.change = new Array;
 		element.images.change = new Array;
+		element.images_resp.change = new Array;
 		element.resp.change = new Array;
+		element.resp_person.change = new Array;
 		var elementRootByPerson = d3.nest()
 			.key(function(d){return d.user})
 			.entries(elementRoot.values);
@@ -155,30 +196,58 @@ function dataParse() {
 				function(d){return d.images});
 			person.resp = d3.mean(person.values,
 				function(d){return d.totalChildren});
-			element.chars_total.change.push(person.chars_total - personalAvg[person.key].chars_total);
-			element.textchars.change.push(person.textchars - personalAvg[person.key].textchars);
-			element.images.change.push(person.images - personalAvg[person.key].images);
-			element.resp.change.push(person.resp - personalAvg[person.key].resp);
+			element.chars_total.change.push(person.chars_total - personalAvgOfRoot[person.key].chars_total);
+			element.textchars.change.push(person.textchars - personalAvgOfRoot[person.key].textchars);
+			element.images.change.push(person.images - personalAvgOfRoot[person.key].images);
+			element.resp.change.push(person.resp - personalAvgOfRoot[person.key].resp);
+		});
+		var elementChildrenByPerson = d3.nest()
+			.key(function(d){return d.user})
+			.entries(elementChildren.values);
+		elementChildrenByPerson.forEach(person =>{
+			person.chars_total_resp = d3.mean(person.values,
+				function(d){return d.chars_total});
+			person.textchars_resp = d3.mean(person.values,
+				function(d){return d.textchars});
+			person.images_resp = d3.mean(person.values,
+				function(d){return d.images});
+			person.resp_person = person.values.length;
+			element.chars_total_resp.change.push(person.chars_total_resp - personalAvgOfChildren[person.key].chars_total_resp);
+			element.textchars_resp.change.push(person.textchars_resp - personalAvgOfChildren[person.key].textchars_resp);
+			element.images_resp.change.push(person.images_resp - personalAvgOfChildren[person.key].images_resp);
+			element.resp_person.change.push(person.resp_person - personalAvgOfChildren[person.key].resp_person);
 		});
 	});
 
 	// Calculate the standard diviation
 	var change = new Object;
 	change.chars_total = new Array;
+	change.chars_total_resp = new Array;
 	change.textchars = new Array;
+	change.textchars_resp = new Array;
 	change.images = new Array;
+	change.images_resp = new Array;
 	change.resp = new Array;
+	change.resp_person = new Array;
 	dataByTopic.forEach(element => {
 		change.chars_total = change.chars_total.concat(element.chars_total.change);
+		change.chars_total_resp = change.chars_total_resp.concat(element.chars_total_resp.change);
 		change.textchars = change.textchars.concat(element.textchars.change);
+		change.textchars_resp = change.textchars_resp.concat(element.textchars_resp.change);
 		change.images = change.images.concat(element.images.change);
+		change.images_resp = change.images_resp.concat(element.images_resp.change);
 		change.resp = change.resp.concat(element.resp.change);
+		change.resp_person = change.resp_person.concat(element.resp_person.change);
 	});
 	sigma = new Object;
 	sigma.chars_total = d3.deviation(change.chars_total);
+	sigma.chars_total_resp = d3.deviation(change.chars_total_resp);
 	sigma.textchars = d3.deviation(change.textchars);
+	sigma.textchars_resp = d3.deviation(change.textchars_resp);
 	sigma.images = d3.deviation(change.images);
+	sigma.images_resp = d3.deviation(change.images_resp);
 	sigma.resp = d3.deviation(change.resp);
+	sigma.resp_person = d3.deviation(change.resp_person);
 
 }
 
