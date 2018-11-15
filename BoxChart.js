@@ -40,9 +40,9 @@ var createBoxChart = function (dataByTopic) {
 		},
 		measureName = {
 			chars_total: "Post total characters", 
-			chars_total_resp:"Response total character", 
+			chars_total_resp:"Response total characters", 
 			textchars: "Post total text characters", 
-			textchars_resp: "Response total text character",
+			textchars_resp: "Response total text characters",
 			images: "Image number per post", 
 			images_resp: "Image number per response",
 			resp: "Response per post",
